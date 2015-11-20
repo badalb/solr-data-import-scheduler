@@ -48,6 +48,7 @@ public class HttpPostScheduler extends TimerTask {
     private String cores;
     private SolrDataImportProperties p;
     private boolean singleCore;
+    private int indexCount;
 
     private static final Logger logger = LoggerFactory.getLogger(HttpPostScheduler.class);
 
@@ -79,6 +80,7 @@ public class HttpPostScheduler extends TimerTask {
         params      = p.getProperty(SolrDataImportProperties.PARAMS);
         interval    = p.getProperty(SolrDataImportProperties.INTERVAL);
         syncCores   = cores != null ? cores.split(",") : null;
+        indexCount =  Integer.valueOf(p.getProperty(SolrDataImportProperties.INDEX_COUNT));
     }
 
     private void fixParams(String webAppName) {
@@ -118,15 +120,30 @@ public class HttpPostScheduler extends TimerTask {
     }
 
 
-    private void prepUrlSendHttpPost() {
-        String coreUrl = "http://" + server + ":" + port + "/" + webapp + params;
-        sendHttpPost(coreUrl, null);
-    }
+	private void prepUrlSendHttpPost() {
+		String[] postParams = params.split(",");
+		String[] postWebapp = webapp.split(",");
 
-    private void prepUrlSendHttpPost(String coreName) {
-        String coreUrl = "http://" + server + ":" + port + "/" + webapp + "/" + coreName + params;
-        sendHttpPost(coreUrl, coreName);
-    }
+		for (int i = 0; i < indexCount; i++) {
+			String coreUrl = "http://" + server + ":" + port + "/"
+					+ postWebapp[i] + postParams[i];
+			sendHttpPost(coreUrl, null);
+		}
+
+	}
+
+	private void prepUrlSendHttpPost(String coreName) {
+
+		String[] postParams = params.split(",");
+		String[] postWebapp = webapp.split(",");
+
+		for (int i = 0; i < indexCount; i++) {
+			String coreUrl = "http://" + server + ":" + port + "/"
+					+ postWebapp[i] + "/" + coreName + postParams[i];
+			sendHttpPost(coreUrl, coreName);
+		}
+
+	}
 
 
     private void sendHttpPost(String completeUrl, String coreName) {
